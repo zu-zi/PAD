@@ -1,0 +1,133 @@
+# PAD hyper-parameters.
+# Shared settings sit at the top; per-domain overrides live under
+# DOMAINS (a list whose order defines the training sequence).
+
+MODEL:
+  NAME: "ViT-B-16"
+  STRIDE_SIZE: [16, 16]
+  ID_LOSS_WEIGHT: 0.25
+  TRIPLET_LOSS_WEIGHT: 1.0
+  I2T_LOSS_WEIGHT: 1.0
+  LABEL_SMOOTH: True
+
+INPUT:
+  SIZE_TRAIN: [256, 128]
+  SIZE_TEST:  [256, 128]
+  PROB: 0.5
+  RE_PROB: 0.5
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD:  [0.5, 0.5, 0.5]
+
+DATALOADER:
+  SAMPLER: "softmax_triplet"
+  NUM_INSTANCE: 4
+  NUM_WORKERS: 8
+
+DATASETS:
+  ROOT_DIR: "data"
+
+SOLVER:
+  SEED: 42
+  MARGIN: 0.3
+  STAGE1:
+    IMS_PER_BATCH: 64
+    OPTIMIZER: "Adam"
+    BASE_LR: 0.00035
+    WEIGHT_DECAY: 1.0e-4
+    MAX_EPOCHS: 12
+    LOG_PERIOD: 50
+    WARMUP_EPOCHS: 3
+    WARMUP_LR_INIT: 1.0e-5
+    LR_MIN: 1.0e-6
+  STAGE2:
+    IMS_PER_BATCH: 64
+    OPTIMIZER: "Adam"
+    BASE_LR: 5.0e-6
+    WEIGHT_DECAY: 1.0e-4
+    MAX_EPOCHS: 25
+    LOG_PERIOD: 50
+    STEPS: [14, 22]
+    GAMMA: 0.1
+    WARMUP_ITERS: 10
+    WARMUP_FACTOR: 0.1
+    WARMUP_METHOD: "linear"
+
+TEST:
+  IMS_PER_BATCH: 128
+  FEAT_NORM: "yes"
+  NECK_FEAT: "before"
+
+TA_PROMPT:
+  N_CTX: 4
+  N_CLS_CTX: 4
+
+VA_PROMPT:
+  ENABLE: True
+  G_LEN: 6
+  E_LEN: 6
+  POOL_SIZE: 36
+  TOP_K: 4
+  EMBEDDING_KEY: "mean"
+  KEY_LEARNABLE: True
+  STRIP_AFTER_BLOCK: True
+  NEW_SLOTS_PER_DOMAIN: 8
+
+UNFREEZE:
+  LAST_BLOCKS: 4
+
+OPT:
+  PROMPT_LR: 0.005
+  PROMPT_WD: 0.0
+
+DISTILL:
+  ENABLE: True
+  LAMBDA_FEAT: 0.5
+  LAMBDA_LOGIT: 0.5
+  TEMP: 4.0
+  EMA_MOMENTUM: 0.997
+
+TEXTKD:
+  ENABLE: True
+  LAMBDA_LOGIT: 0.5
+  TEMP: 0.07
+  LOGITS_SCALE: 7.0
+  NEG_PER_BATCH: 256
+
+# Per-domain overrides. The training sequence follows this list order.
+# The special key `dataset` is mapped to DATASETS.NAMES automatically.
+DOMAINS:
+
+  - name: market1501
+    dataset: market1501
+    # First domain: no teacher available; train the full visual branch
+    # with a longer schedule and disable both KD branches.
+    SOLVER:
+      STAGE1: {MAX_EPOCHS: 20}
+      STAGE2: {MAX_EPOCHS: 30, STEPS: [18, 26]}
+    DISTILL: {ENABLE: False}
+    TEXTKD:  {ENABLE: False}
+    OPT:     {PROMPT_LR: 0.002}
+
+  - name: cuhksysu
+    dataset: cuhksysu
+
+  - name: dukemtmcreid
+    dataset: dukemtmcreid
+
+  - name: msmt17
+    dataset: msmt17
+    # Larger dataset -> slightly longer schedule, more workers.
+    DATALOADER: {NUM_WORKERS: 12}
+    SOLVER:
+      STAGE1: {MAX_EPOCHS: 15}
+      STAGE2: {MAX_EPOCHS: 32, STEPS: [18, 28]}
+
+  - name: cuhk03
+    dataset: cuhk03
+    # Small dataset -> smaller batch, stronger erasing, fewer new slots.
+    INPUT:     {RE_PROB: 0.6}
+    SOLVER:
+      STAGE1: {IMS_PER_BATCH: 48, MAX_EPOCHS: 10}
+      STAGE2: {IMS_PER_BATCH: 48, MAX_EPOCHS: 28, STEPS: [16, 24]}
+    VA_PROMPT: {NEW_SLOTS_PER_DOMAIN: 4}

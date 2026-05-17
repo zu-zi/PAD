@@ -1,40 +1,95 @@
-# PAD
+# PAD: Prompt-Anchored Vision–Text Distillation for Lifelong Person Re-identification
 
-Official repository for **“Prompt-Anchored Vision–Text Distillation for Lifelong Person Re-identification”** (CVPR 2026).
+Official PyTorch implementation of our CVPR 2026 paper
+*Prompt-Anchored Vision–Text Distillation for Lifelong Person Re-identification*.
 
-## Overview
+## Pipeline
 
-We propose **PAD** (Prompt-Anchored Vision–Text Distillation), a framework for **exemplar-free lifelong person re-identification (LReID)**.
+![PAD framework](assets/framework.png)
 
-PAD introduces a frozen text encoder as a stable semantic anchor across domains, and combines:
+## Installation
 
-* **TA-Prompt** for text-side semantic alignment
-* **VA-Prompt** for visual-side incremental adaptation
-* **Fixed textual distillation** to preserve semantic consistency
-* **EMA-based visual distillation** to mitigate semantic drift and catastrophic forgetting
+```bash
+conda create -n pad python=3.10 -y
+conda activate pad
 
-The proposed method achieves strong performance on both **seen** and **unseen** domains under standard lifelong ReID benchmarks.
+# CUDA-matched PyTorch from https://pytorch.org/
+pip install torch==2.1.0 torchvision==0.16.0
 
-## Status
-
-Code will be released soon.
-
-## Paper
-
-**Prompt-Anchored Vision–Text Distillation for Lifelong Person Re-identification**
-CVPR 2026
-
-## Contact
-
-Wen Wen ([zuzi666666@gmail.com](mailto:zuzi666666@gmail.com))
-
-## Citation
-
-```bibtex
-@inproceedings{wen2026pad,
-  title={Prompt-Anchored Vision–Text Distillation for Lifelong Person Re-identification},
-  author={Wen, Wen and Chen, Hao and Zhang, Shiliang},
-  booktitle={CVPR},
-  year={2026}
-}
+pip install -r requirements.txt
 ```
+
+The CLIP ViT-B/16 weights (~340 MB) are downloaded automatically on the
+first run.
+
+## Prepare datasets
+
+Place the datasets under `data/` using the following layout. The
+conversion of CUHK-SYSU / CUHK03 into ReID-style folders follows the
+commonly-used scripts.
+
+```
+data/
+├── market1501/{bounding_box_train, query, bounding_box_test}
+├── dukemtmcreid/{bounding_box_train, query, bounding_box_test}
+├── msmt17/{train, test, list_train.txt, list_val.txt, list_query.txt, list_gallery.txt}
+├── cuhksysu/{bounding_box_train, query, bounding_box_test}        # {pid:04d}_c{camid}_{idx:05d}.jpg
+├── cuhk03/{bounding_box_train, query, bounding_box_test}          # new-protocol detected, camid in [1, 10]
+├── LPW_s2/{bounding_box_train, query, bounding_box_test}          # optional (LPW substitution protocol)
+└── Unseen/
+    ├── cuhk01/campus/*.png
+    ├── cuhk02/Dataset/P5/{cam1, cam2}/*.png
+    ├── grid/{probe, gallery}/*.jpeg
+    ├── ilids/i-LIDS_Pedestrian/Persons/*.jpg
+    ├── prid/single_shot/{cam_a, cam_b}/person_XXXX.png
+    ├── sensereid/SenseReID/{test_probe, test_gallery}/*.jpg
+    └── viper/VIPeR/{cam_a, cam_b}/*.bmp
+```
+
+## Training
+
+Sequentially train all five seen domains (AKA order-1) and evaluate on
+every seen domain after each step:
+
+```bash
+bash scripts/run_lifelong.sh
+```
+
+Resume from a specific domain:
+
+```bash
+bash scripts/run_lifelong.sh dukemtmcreid
+```
+
+Per-domain invocation:
+
+```bash
+# First (anchor) domain: no teacher, full visual-branch tuning.
+python train_lifelong.py --domain_idx 0 OUTPUT_DIR Results/market1501
+
+# Subsequent domain: pass the previous-domain checkpoint.
+python train_lifelong.py --domain_idx 1 \
+    --resume_ckpt Results/market1501/ViT-B-16_stage2.pth \
+    OUTPUT_DIR Results/cuhksysu
+```
+
+All hyper-parameters live in a single file, `configs/pad.yml`: the
+top-level block holds the shared settings and the `DOMAINS` list declares
+the per-domain overrides (training sequence follows the list order).
+`--domain_idx i` (or `--domain_name NAME`) selects the i-th entry.
+
+## Evaluation
+
+```bash
+python test_lifelong.py --domain_idx 4 \
+    --ckpt Results/cuhk03/ViT-B-16_stage2.pth \
+    --eval_domains market1501,cuhksysu,dukemtmcreid,msmt17,cuhk03
+```
+
+## Acknowledgement
+
+The CLIP backbone and tokenizer under `pad/clip/` are from
+[OpenAI CLIP](https://github.com/openai/CLIP). The overall training
+pipeline builds on [CLIP-ReID](https://github.com/Syliz517/CLIP-ReID);
+the dual-prompt design is inspired by
+[DualPrompt](https://github.com/JH-LEE-KR/dualprompt-pytorch).

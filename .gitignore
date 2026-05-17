@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+.idea/
+.vscode/
+.DS_Store
+
+# experiment artefacts
+Results/
+Results_*/
+logs/
+logs_lifelong/
+*.pth
+*.pt
+*.onnx
+
+# data (keep structure, never commit images)
+data/
+!data/.gitkeep
+
+# CLIP weights cache (downloaded on first run)
+pad/clip/*.pt
