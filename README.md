@@ -24,17 +24,15 @@ first run.
 
 ## Prepare datasets
 
-Place the datasets under `data/` using the following layout. The
-conversion of CUHK-SYSU / CUHK03 into ReID-style folders follows the
-commonly-used scripts (e.g. CLIP-ReID, PatchKD, DKP).
+Place the datasets under `data/` using the following layout.
 
 ```
 data/
 ├── market1501/{bounding_box_train, query, bounding_box_test}
 ├── dukemtmcreid/{bounding_box_train, query, bounding_box_test}
 ├── msmt17/{train, test, list_train.txt, list_val.txt, list_query.txt, list_gallery.txt}
-├── cuhksysu/{bounding_box_train, query, bounding_box_test}        # {pid:04d}_c{camid}_{idx:05d}.jpg
-├── cuhk03/{bounding_box_train, query, bounding_box_test}          # new-protocol detected, camid in [1, 10]
+├── cuhksysu/{bounding_box_train, query, bounding_box_test}        # from cuhksysu4reid, renamed to {pid:04d}_c1_{idx:05d}.jpg
+├── cuhk03/{bounding_box_train, query, bounding_box_test}          # convert with tools/convert_cuhk03.py
 ├── LPW_s2/{bounding_box_train, query, bounding_box_test}          # optional (LPW substitution protocol)
 └── Unseen/
     ├── cuhk01/campus/*.png
