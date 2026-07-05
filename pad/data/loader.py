@@ -70,7 +70,14 @@ def make_dataloader(cfg):
 
     names = cfg.DATASETS.NAMES
     name = names[0] if isinstance(names, (list, tuple)) else names
-    dataset = _FACTORY[name](root=cfg.DATASETS.ROOT_DIR)
+    eval_kwargs = {}
+    if hasattr(cfg, "EVAL"):
+        eval_kwargs = dict(
+            split_id=int(cfg.EVAL.SPLIT_ID),
+            seed=int(cfg.EVAL.SEED),
+            direction=str(cfg.EVAL.DIRECTION),
+        )
+    dataset = _FACTORY[name](root=cfg.DATASETS.ROOT_DIR, **eval_kwargs)
 
     num_workers = cfg.DATALOADER.NUM_WORKERS
     num_classes = dataset.num_train_pids

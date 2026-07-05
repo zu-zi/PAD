@@ -5,6 +5,7 @@ numpy>=1.23
 Pillow>=9.0
 PyYAML>=6.0
 yacs>=0.1.8
+scipy>=1.9
 ftfy
 regex
 tqdm

@@ -18,7 +18,7 @@ logs_lifelong/
 *.onnx
 
 # data (keep structure, never commit images)
-# data/
+data/
 !data/.gitkeep
 
 # CLIP weights cache (downloaded on first run)

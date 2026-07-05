@@ -26,7 +26,7 @@ first run.
 
 Place the datasets under `data/` using the following layout. The
 conversion of CUHK-SYSU / CUHK03 into ReID-style folders follows the
-commonly-used scripts.
+commonly-used scripts (e.g. CLIP-ReID, PatchKD, DKP).
 
 ```
 data/
@@ -39,7 +39,7 @@ data/
 └── Unseen/
     ├── cuhk01/campus/*.png
     ├── cuhk02/Dataset/P5/{cam1, cam2}/*.png
-    ├── grid/{probe, gallery}/*.jpeg
+    ├── grid/{probe, gallery}/*.jpeg              
     ├── ilids/i-LIDS_Pedestrian/Persons/*.jpg
     ├── prid/single_shot/{cam_a, cam_b}/person_XXXX.png
     ├── sensereid/SenseReID/{test_probe, test_gallery}/*.jpg
@@ -81,9 +81,13 @@ the per-domain overrides (training sequence follows the list order).
 ## Evaluation
 
 ```bash
+# Seen domains.
 python test_lifelong.py --domain_idx 4 \
     --ckpt Results/cuhk03/ViT-B-16_stage2.pth \
     --eval_domains market1501,cuhksysu,dukemtmcreid,msmt17,cuhk03
+
+# Unseen domains
+bash scripts/eval_unseen.sh Results/cuhk03/ViT-B-16_stage2.pth
 ```
 
 ## Acknowledgement
@@ -93,3 +97,16 @@ The CLIP backbone and tokenizer under `pad/clip/` are from
 pipeline builds on [CLIP-ReID](https://github.com/Syliz517/CLIP-ReID);
 the dual-prompt design is inspired by
 [DualPrompt](https://github.com/JH-LEE-KR/dualprompt-pytorch).
+
+## Citation
+
+```bibtex
+@InProceedings{Wen_2026_CVPR,
+    author    = {Wen, Wen and Chen, Hao and Zhang, Shiliang},
+    title     = {Prompt-Anchored Vision-Text Distillation for Lifelong Person Re-identification},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2026},
+    pages     = {18503-18512}
+}
+```

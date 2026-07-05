@@ -124,6 +124,14 @@ _C.TEST.IMS_PER_BATCH = 128
 _C.TEST.FEAT_NORM = "yes"
 _C.TEST.NECK_FEAT = "before"
 
+# Unseen-domain evaluation protocol (see pad/data/unseen.py). A bare
+# call uses split 0; scripts/eval_unseen.sh loops over the splits used
+# to report Table 1's Unseen-Avg and averages the results.
+_C.EVAL = CN()
+_C.EVAL.SPLIT_ID = 0
+_C.EVAL.SEED = 123
+_C.EVAL.DIRECTION = "auto"   # "auto" | "A2B" | "B2A"
+
 _C.OUTPUT_DIR = ""
 
 cfg = _C  # public alias
