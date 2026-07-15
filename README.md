@@ -46,6 +46,9 @@ data/
 
 ## Training
 
+All reported numbers use a single visible GPU
+(`export CUDA_VISIBLE_DEVICES=<idx>`). If more than one GPU is visible, the model is auto-wrapped in `nn.DataParallel` (no SyncBatchNorm) for faster training, which can weaken cross-domain distillation and increase forgetting on earlier domains.
+
 Sequentially train all five seen domains (AKA order-1) and evaluate on
 every seen domain after each step:
 
